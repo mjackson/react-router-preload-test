@@ -1,5 +1,5 @@
 {
-  "name": "create-resource-test",
+  "name": "react-suspense-resource",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
