@@ -3,13 +3,21 @@ import React from "react";
 
 import { preloadRoute } from "./react-router.js";
 
+function delay(fn, ms) {
+  return () =>
+    new Promise(resolve => {
+      setTimeout(() => {
+        fn().then(resolve);
+      }, ms);
+    });
+}
+
 // Use React.lazy when you don't want to import a
 // component until it's needed
-let Message = React.lazy(() => import("./Message.js"));
+let Message = React.lazy(delay(() => import("./Message.js"), 3000));
 
 function Fallback() {
-  console.log("render Fallback (suspending)");
-  return <p>loading...</p>;
+  return <p>suspending...</p>;
 }
 
 function App() {
@@ -20,11 +28,13 @@ function App() {
     element: <Message text="hello world" ref={ref} />
   };
 
-  // If we don't preload the route, we will render a <Fallback>
-  // (you'll see it in the console). But if you uncomment the
-  // following line, the <Fallback> never renders because React
-  // never suspends! :D :D :D
-  // preloadRoute(route); // THIS IS THE COOL PART
+  // Normally, the React.lazy Message component will only begin
+  // loading when it is used. In a hierarchy with components that
+  // come from different bundles, this causes a waterfall of loading
+  // during render at each level of the hierarchy. We use this
+  // function to preload the route's component so it renders
+  // immediately without suspending.
+  preloadRoute(route); // THIS IS THE COOL PART
 
   // // This shows we don't swap out the underlying element on
   // // subsequent renders. Even though the <Message> element is
