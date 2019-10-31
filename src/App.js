@@ -1,61 +1,61 @@
 import "./App.css";
 import React from "react";
 
-import { createResource, lazy } from "./react-suspense-resource.js";
+import { preloadRoute } from "./react-router.js";
 
 // Create a resource for a component that is to be
 // loaded dynamically at runtime
-let messageResource = createResource(() => import("./Message.js"));
+let Message = React.lazy(() => import("./Message.js"));
 
-// We can eagerly load the resource
-// messageResource.load();
-
-// OR lazily load it. In this case the resource is a
-// React component, so we can pass it directly to React.lazy
-// let Message = React.lazy(messageResource.load);
-
-// OR lazily load it via our own React.lazy wrapper
-let Message = lazy(messageResource);
-
-// But we're not just limited to components. We could load
-// data via the same strategy.
-// let params = { id: 123 };
-// let dataResource = createResource(() => fetch(`/api/messages/${params.id}`));
-
-// OR we could load both code and data as part of the same resource!
-// let combinedResource = createResource(() =>
-//   Promise.all([
-//     import("./Message.js"),
-//     fetch(`/api/messages/${params.id}`)
-//   ]).then(([mod, data]) => ({
-//     component: mod.default,
-//     data
-//   }))
-// );
-// let { component, data } = useResource(combinedResource);
+function Fallback() {
+  console.log("render Fallback (suspending)");
+  return <p>loading...</p>;
+}
 
 function App() {
+  // // This shows we don't swap out the underlying element on
+  // // subsequent renders. Even though the <Message> element is
+  // // re-created each time <App> renders, React detects it has
+  // // the same type as the previous render and does not re-render it.
+  // let [timer, setTimer] = React.useState(0);
+  // React.useEffect(() => {
+  //   setInterval(() => {
+  //     setTimer(timer => timer + 1);
+  //   }, 2000);
+  // }, []);
+
+  // // This shows we support refs.
+  // React.useEffect(() => {
+  //   // Note: There's a weird bug with React.lazy. When we DON'T
+  //   // preload the ref is null AFTER the initial render. But it's
+  //   // there on subsequent renders. Maybe file an issue about this...
+  //   console.log(ref.current);
+  // });
+
   let [showMessage, setShowMessage] = React.useState(false);
+
+  let ref = React.useRef(null);
+  let route = {
+    element: <Message text="hello world" ref={ref} />
+  };
+
+  // If we don't preload the route, we will render a <Fallback>
+  // (you'll see it in the console). But if you uncomment the
+  // following line, the <Fallback> never renders because React
+  // never suspends! :D :D :D
+  // preloadRoute(route); // THIS IS THE COOL PART
 
   return (
     <div className="App">
       <p>
-        <button onClick={() => setShowMessage(!showMessage)}>toggle</button>
+        <button onClick={() => setShowMessage(!showMessage)}>
+          {showMessage ? "Hide" : "Show"} the message
+        </button>
       </p>
 
-      {/* Use a React.lazy element just like normal */}
-      <React.Suspense fallback={<p>loading...</p>}>
-        {showMessage && <Message />}
+      <React.Suspense fallback={<Fallback />}>
+        {showMessage && route.element}
       </React.Suspense>
-
-      {/* OR use a <Resource> element to render with a resource value */}
-      {/*
-      <React.Suspense fallback={<p>loading...</p>}>
-        <Resource resource={messageResource}>
-          {Component => <Component />}
-        </Resource>
-      </React.Suspense>
-      */}
     </div>
   );
 }
