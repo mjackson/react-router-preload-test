@@ -3,8 +3,8 @@ import React from "react";
 
 import { preloadRoute } from "./react-router.js";
 
-// Create a resource for a component that is to be
-// loaded dynamically at runtime
+// Use React.lazy when you don't want to import a
+// component until it's needed
 let Message = React.lazy(() => import("./Message.js"));
 
 function Fallback() {
@@ -13,6 +13,19 @@ function Fallback() {
 }
 
 function App() {
+  let [showMessage, setShowMessage] = React.useState(false);
+
+  let ref = React.useRef(null);
+  let route = {
+    element: <Message text="hello world" ref={ref} />
+  };
+
+  // If we don't preload the route, we will render a <Fallback>
+  // (you'll see it in the console). But if you uncomment the
+  // following line, the <Fallback> never renders because React
+  // never suspends! :D :D :D
+  // preloadRoute(route); // THIS IS THE COOL PART
+
   // // This shows we don't swap out the underlying element on
   // // subsequent renders. Even though the <Message> element is
   // // re-created each time <App> renders, React detects it has
@@ -31,19 +44,6 @@ function App() {
   //   // there on subsequent renders. Maybe file an issue about this...
   //   console.log(ref.current);
   // });
-
-  let [showMessage, setShowMessage] = React.useState(false);
-
-  let ref = React.useRef(null);
-  let route = {
-    element: <Message text="hello world" ref={ref} />
-  };
-
-  // If we don't preload the route, we will render a <Fallback>
-  // (you'll see it in the console). But if you uncomment the
-  // following line, the <Fallback> never renders because React
-  // never suspends! :D :D :D
-  // preloadRoute(route); // THIS IS THE COOL PART
 
   return (
     <div className="App">
